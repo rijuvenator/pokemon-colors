@@ -4,7 +4,7 @@ import random
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -152,7 +152,7 @@ class ImageRunner():
         return p
 
     def run(self):
-        with ThreadPool(32) as pool:
+        with Pool(32) as pool:
             data = pool.map( self.mapfunc, [(idx, self.iakwargs) for idx in range(self.indices[0], self.indices[1]+1)] )
         self.data = data
 
