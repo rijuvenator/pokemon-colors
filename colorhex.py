@@ -129,7 +129,7 @@ class ImageAnalysis():
         self.computeData()
         self.computeMainColors()
         self.computeCounts()
-        logging.info(f'Completed image analysis #{self.index}')
+        logging.info(f'Completed image analysis #{self.index} with {self.nclusters} colors')
 
 # this class runs several image analyses and collects the results multithreaded
 # also has a couple functions for preview images, used for development before jumping into svg
@@ -429,6 +429,15 @@ class Canvas():
             f.write(str(canvas))
             logging.info(f'{fname} written')
 
+# enum for defining 3 possible ways of getting hexagon data
+# NORMAL means process the data and use the proportions; any of the rotation starts are good
+# EQUAL means process the data and make all proportions equal; most interesting to use in conjunction with rotStart=RotationStart.ZERO
+# DUMMY means skip the image processing and use some dummy data instead
+class DataMode(Enum):
+    NORMAL = 0
+    EQUAL = 1
+    DUMMY = 2
+
 # the final mega runner class. all parameters except constants and MARGINX and MARGINY for Center can be controlled here
 # (in the future if desired, add MARGINX and MARGINY alongside radius to the MainRunner class and wrangle with getCenters())
 # the basics are the indices and the radius; then there are parameters for ImageRunner and ImageAnalysis
@@ -464,16 +473,24 @@ class MainRunner():
         self.runner.showWeightedGrid()
 
     # ensures the runner and runs the dedicated data function
-    # also provides me a way of turning it off so that I can test things quickly
-    def getDataForHexagons(self, testmode=False):
-        logging.info(f'Getting hexagon data, test mode {testmode}')
-        if not testmode:
-            self.runAnalyses()
-            data = self.runner.getDataForHexagons()
-        else:
+    # provides a few other modes for quick testing and variants
+    def getDataForHexagons(self, mode=DataMode.NORMAL):
+        logging.info(f'Getting hexagon data, {mode.name} data mode')
+        if mode == DataMode.DUMMY:
             data = []
             for idx in range(self.indices[0], self.indices[1]+1):
                 data.append( (idx, [(.2, 'red'), (.5, 'blue'), (.3, 'green')]) )
+        else:
+            self.runAnalyses()
+            data = self.runner.getDataForHexagons()
+            if mode == DataMode.NORMAL:
+                pass
+            elif mode == DataMode.EQUAL:
+                data_equal = []
+                for idx, breakdown in data:
+                    nclusters = len(breakdown)
+                    data_equal.append((idx, [(1./nclusters, color) for pct, color in breakdown]))
+                data = data_equal
         return data
 
     # all right, some explanation needed. keep in mind the hexagon coordinate system
@@ -565,9 +582,9 @@ class MainRunner():
     # getting the data involves running the image runner, which involves running many image analyses...
     # once the centers and data are obtained, loop over the data, get the center, declare the hex,
     # compute the sectors and save them in a .computedSectors member variables for access later
-    def getHexagons(self, testmode=False, rotStart=RotationStart.RANDOM):
+    def getHexagons(self, mode=DataMode.NORMAL, rotStart=RotationStart.RANDOM):
         centers = self.getCenters()
-        sectorData = self.getDataForHexagons(testmode=testmode)
+        sectorData = self.getDataForHexagons(mode=mode)
 
         logging.info('Declaring hexagons and computing sectors')
         hexes = []
@@ -584,7 +601,7 @@ class MainRunner():
     # get the hexagons, declare the canvas with the hexagons, and render
     def renderCanvas(self, **kwargs):
         hexagonArgs, canvasArgs, renderArgs = {}, {}, {}
-        for key in ('testmode', 'rotStart'):
+        for key in ('mode', 'rotStart'):
             if key in kwargs:
                 hexagonArgs[key] = kwargs[key]
         for key in ('width', 'height'):
@@ -609,7 +626,7 @@ if __name__ == '__main__':
         #alpha_cutoff=200
     )
     main.renderCanvas(
-        #testmode=False,
+        #mode=DataMode.NORMAL,
         #rotStart=RotationStart.RANDOM,
         #width=480,
         #height=550,

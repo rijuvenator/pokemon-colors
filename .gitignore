@@ -1,2 +1,3 @@
 *.svg
 pokemon/sugimori/*
+.DS_Store

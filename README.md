@@ -29,8 +29,14 @@ Parameters that can be modified (mostly commented out) include:
 * `nclusters` (default `3`): the number of clusters for _k_-means, corresponding to the number of dominant colors computed. This implementation uses the same number of clusters for every image; results are generally aesthetically pleasing for 3 colors, but there is potential to pre-analyze every image to determine the optimal number of clusters for every image
 * `lumi_cutoff` (default `0.2`): the brightness threshold (see _Technical Details_) below which the pixels are not included in the dataset, removing dark colors which aren't as aesthetically pleasing when computed and represented
 * `alpha_cutoff` (default `200`): the RGBA alpha threshold below which the pixels are not included in the dataset
-* `testmode` (default `False`): whether to skip the computationally intensive image processing and visualize the hexagon graphic with dummy data
-* `rotStart` (default `RotationStart.RANDOM`): how to choose the starting angle for the pie chart; `RotationStart.ZERO` starts every pie chart at 0º, `RotationStart.INDEX` starts each pie chart at an angle equal to the image index
+* `mode` (default `DataMode.NORMAL`): how to compute the data for visualization of the hexagon graphic
+  * `DataMode.NORMAL` computes the colors and proportions
+  * `DataMode.EQUAL` computes the colors but discards the proportions in favor of equal-sized sectors; best used with `rotStart=RotationStart.ZERO`
+  * `DataMode.DUMMY` skips the computationally intensive image processing in favor of dummy data
+* `rotStart` (default `RotationStart.RANDOM`): how to choose the starting angle for the pie chart
+  * `RotationStart.ZERO` starts every pie chart at 0º
+  * `RotationStart.RANDOM` starts each pie chart at a random angle in degrees between 0º and 360º
+  * `RotationStart.INDEX` starts each pie chart at an angle in degrees equal to the image index
 * `width`, `height` (default `480`, `550`): width and height of the SVG graphic
 * `bounding_box` (default `False`): whether to draw the SVG graphic bounding box, useful for development
 * `draw_coords` (default `False`): whether to draw the hexagonal coordinate system coordinates onto each hexagon, useful for development
